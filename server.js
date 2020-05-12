@@ -29,43 +29,26 @@ const authRoutes = createAuthRoutes({
     ).then(result => result.rows[0]);
   }
 });
-//each app route needs 3 arguments
+
 app.use('/auth', authRoutes);
-// app.use('/api', ensureAuth);
+app.use('/api', ensureAuth);
 
-app.post('/signup', createAuthRoutes, async(req, res) => {
-  
-  const data = await client.query(`
-      INSERT INTO users (email, hash)
-      VALUES($1, $2)
-      RETURNING id, email;
-  `, [req.body.email, req.body.password]);
-  res.json(data.rows);
-});
-
-app.post('/signin', createAuthRoutes, async(req, res) => {
-  const data = await client.query(`
-      SELECT user.email, user.password
-  `, [req.body.email, req.body.password]);
-  res.json(data.rows);
-});
-
-app.get('/adventures', ensureAuth, async(req, res) => {
+app.get('/api/adventures', async(req, res) => {
   const data = await client.query('SELECT * from adventures WHERE owner_id=$1', [req.userId]);
 
   res.json(data.rows);
 });
 
-app.post('/adventures', ensureAuth, async(req, res) => {
+app.post('/api/adventures', async(req, res) => {
   const data = await client.query(`
-    INSERT INTO adventures (name, danger_level, ownder_id)
-    values($1, $2, $3)
+    INSERT into adventures (name, danger_level, owner_id)
+    values ($1, $2, $3)
     returning *
   `, [req.body.name, req.body.danger_level, req.userId]);
   res.json(data.rows);
 });
 
-app.put('/adventures', ensureAuth, async(req, res) => {
+app.put('/api/adventures/:id', async(req, res) => {
   const data = await client.query(`
       UPDATE adventures
       SET is_completed=true
